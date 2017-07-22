@@ -1,31 +1,53 @@
 package com.test.lambda;
 
-import java.util.HashMap;
+/*import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+*/import java.util.Random;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
+/*import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
+*/
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 
-public class FetchRecordFromDynamoDB implements RequestHandler<String,String>{
+public class FetchRecordFromDynamoDB implements RequestHandler<String,QuestionModel>{
 
 	@Override
-	public String handleRequest(String input, Context context) {
-		context.getLogger().log("Welcome to Lambda");
+	public QuestionModel handleRequest(String input, Context context) {
+		//context.getLogger().log("Welcome to Lambda");
 		
-		trigger(input);
+
+		return fetchRecord(input);
 		
-		return null;
+		//return trigger(input);
+		
+	}
+	
+	private QuestionModel fetchRecord(String input) {
+		
+		AmazonDynamoDB dynamoDB = new AmazonDynamoDBClient();
+        Region usWest2 = Region.getRegion(Regions.US_EAST_1);
+        dynamoDB.setRegion(usWest2);
+        
+        Integer count = Integer.parseInt(System.getenv(input));
+		
+		DynamoDBMapper mapper = new DynamoDBMapper(dynamoDB);
+		
+		QuestionModel result = mapper.load(QuestionModel.class, new Random().nextInt(count), 
+				new DynamoDBMapperConfig(new DynamoDBMapperConfig.TableNameOverride(input)));
+	    
+		return result;
 	}
 
-	private void trigger(String input) {
+	/*private String trigger(String input) {
 		Integer count = Integer.parseInt(System.getenv(input));
 		
 		AmazonDynamoDB dynamoDB = new AmazonDynamoDBClient();
@@ -46,14 +68,14 @@ public class FetchRecordFromDynamoDB implements RequestHandler<String,String>{
 		
 		List<Map<String,AttributeValue>> attributeValues = dynamoDB.query(queryRequest).getItems();
 		
-		System.out.println(attributeValues.get(0));
+		return attributeValues.get(0).toString();
 	}
 	
 	public static void main(String a[]) {
 		//System.getenv().put("profit_loss", "181");
 		FetchRecordFromDynamoDB test = new FetchRecordFromDynamoDB();
 		test.trigger("profit_loss");
-	}
+	}*/
 	
 	
 	
