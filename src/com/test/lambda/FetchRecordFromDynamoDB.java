@@ -1,9 +1,10 @@
 package com.test.lambda;
 
-/*import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-*/import java.util.Random;
+import java.util.Random;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
@@ -11,19 +12,20 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
-/*import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.QueryRequest;
-*/
+import com.amazonaws.services.dynamodbv2.datamodeling.KeyPair;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 
-public class FetchRecordFromDynamoDB implements RequestHandler<String,QuestionModel>{
+public class FetchRecordFromDynamoDB implements RequestHandler<String,List<QuestionModel>>{
 
 	@Override
-	public QuestionModel handleRequest(String input, Context context) {
+	public List<QuestionModel> handleRequest(String input, Context context) {
 		//context.getLogger().log("Welcome to Lambda");
 		
+		if(input == null) {
+			context.getLogger().log("Welcome to Lambda");
+			return null;
+		}
 
 		return fetchRecord(input);
 		
@@ -31,7 +33,7 @@ public class FetchRecordFromDynamoDB implements RequestHandler<String,QuestionMo
 		
 	}
 	
-	private QuestionModel fetchRecord(String input) {
+	private List<QuestionModel> fetchRecord(String input) {
 		
 		AmazonDynamoDB dynamoDB = new AmazonDynamoDBClient();
         Region usWest2 = Region.getRegion(Regions.US_EAST_1);
@@ -41,43 +43,30 @@ public class FetchRecordFromDynamoDB implements RequestHandler<String,QuestionMo
 		
 		DynamoDBMapper mapper = new DynamoDBMapper(dynamoDB);
 		
-		QuestionModel result = mapper.load(QuestionModel.class, new Random().nextInt(count), 
-				new DynamoDBMapperConfig(new DynamoDBMapperConfig.TableNameOverride(input)));
-	    
-		return result;
-	}
+		List<QuestionModel> questionModels = new ArrayList<QuestionModel>();
+		
 
-	/*private String trigger(String input) {
-		Integer count = Integer.parseInt(System.getenv(input));
-		
-		AmazonDynamoDB dynamoDB = new AmazonDynamoDBClient();
-        Region usWest2 = Region.getRegion(Regions.US_EAST_1);
-        dynamoDB.setRegion(usWest2);
-        
-        Map<String,String> expressionAttributesNames = new HashMap<>();
-	    expressionAttributesNames.put("#questionId","questionId");
+		List<KeyPair> keyPairList = new ArrayList<>();
 	    
-	    Map<String,AttributeValue> expressionAttributeValues = new HashMap<>();
-	    expressionAttributeValues.put(":questionValue",new AttributeValue().withN(""+new Random().nextInt(count)));
+		for( int i = 0; i < 5 ; i++) {
+			 KeyPair keyPair1 = new KeyPair();
+			 keyPair1.withHashKey(new Random().nextInt(count));
+			 keyPairList.add(keyPair1);
+		}
 		
-		QueryRequest queryRequest = new QueryRequest()
-		        .withTableName(input)
-		        .withKeyConditionExpression("#questionId = :questionValue")
-		        .withExpressionAttributeNames(expressionAttributesNames)
-		        .withExpressionAttributeValues(expressionAttributeValues);
+		Map<Class<?>, List<KeyPair>> keyPairForTable = new HashMap<>();
+	    keyPairForTable.put(QuestionModel.class, keyPairList);
+
+	    Map<String, List<Object>> batchResults = mapper.batchLoad(keyPairForTable, 
+	    		new DynamoDBMapperConfig(new DynamoDBMapperConfig.TableNameOverride(input)));
 		
-		List<Map<String,AttributeValue>> attributeValues = dynamoDB.query(queryRequest).getItems();
+	   // System.out.println("->"+batchResults.values().iterator().next());
+	   
+	    for(Object qModel : batchResults.values().iterator().next()) {
+	    	questionModels.add((QuestionModel)qModel);
+	    }
 		
-		return attributeValues.get(0).toString();
+		return questionModels;
 	}
-	
-	public static void main(String a[]) {
-		//System.getenv().put("profit_loss", "181");
-		FetchRecordFromDynamoDB test = new FetchRecordFromDynamoDB();
-		test.trigger("profit_loss");
-	}*/
-	
-	
-	
 
 }
