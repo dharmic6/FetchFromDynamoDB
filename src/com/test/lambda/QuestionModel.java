@@ -120,6 +120,33 @@ public class QuestionModel {
 	public void setSolution(String solution) {
 		this.solution = solution;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("QuestionModel [questionId=");
+		builder.append(questionId);
+		builder.append(", bookName=");
+		builder.append(bookName);
+		builder.append(", answer=");
+		builder.append(answer);
+		builder.append(", question=");
+		builder.append(question);
+		builder.append(", option1=");
+		builder.append(option1);
+		builder.append(", option2=");
+		builder.append(option2);
+		builder.append(", option3=");
+		builder.append(option3);
+		builder.append(", option4=");
+		builder.append(option4);
+		builder.append(", option5=");
+		builder.append(option5);
+		builder.append(", solution=");
+		builder.append(solution);
+		builder.append("]");
+		return builder.toString();
+	}
 	
 	
 	

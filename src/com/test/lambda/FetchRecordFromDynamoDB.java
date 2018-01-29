@@ -2,9 +2,11 @@ package com.test.lambda;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
@@ -36,7 +38,7 @@ public class FetchRecordFromDynamoDB implements RequestHandler<String,List<Quest
 	private List<QuestionModel> fetchRecord(String input) {
 		
 		AmazonDynamoDB dynamoDB = new AmazonDynamoDBClient();
-        Region usWest2 = Region.getRegion(Regions.US_EAST_1);
+        Region usWest2 = Region.getRegion(Regions.AP_SOUTH_1);
         dynamoDB.setRegion(usWest2);
         
         Integer count = Integer.parseInt(System.getenv(input));
@@ -48,9 +50,17 @@ public class FetchRecordFromDynamoDB implements RequestHandler<String,List<Quest
 
 		List<KeyPair> keyPairList = new ArrayList<>();
 	    
+		Set<Integer> key = new HashSet<Integer>();
+		
 		for( int i = 0; i < 5 ; i++) {
 			 KeyPair keyPair1 = new KeyPair();
-			 keyPair1.withHashKey(new Random().nextInt(count));
+			 int next = new Random().nextInt(count);
+			 if(key.contains(next)) {
+				 i--;
+				 continue;
+			 }
+			 key.add(next);
+			 keyPair1.withHashKey(next);
 			 keyPairList.add(keyPair1);
 		}
 		
