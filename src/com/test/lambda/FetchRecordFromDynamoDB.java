@@ -1,6 +1,7 @@
 package com.test.lambda;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -8,6 +9,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -37,11 +40,16 @@ public class FetchRecordFromDynamoDB implements RequestHandler<String,List<Quest
 	
 	private List<QuestionModel> fetchRecord(String input) {
 		
+		int index = input.indexOf(">");
+		
+		String tableName = input.substring(0, index);
+		String chapterName = input.substring(index+1);
+		
 		AmazonDynamoDB dynamoDB = new AmazonDynamoDBClient();
         Region usWest2 = Region.getRegion(Regions.AP_SOUTH_1);
         dynamoDB.setRegion(usWest2);
         
-        Integer count = Integer.parseInt(System.getenv(input));
+        Integer count = Integer.parseInt(System.getenv(chapterName));
 		
 		DynamoDBMapper mapper = new DynamoDBMapper(dynamoDB);
 		
@@ -50,11 +58,11 @@ public class FetchRecordFromDynamoDB implements RequestHandler<String,List<Quest
 
 		List<KeyPair> keyPairList = new ArrayList<>();
 	    
-		Set<Integer> key = new HashSet<Integer>();
+		Set<String> key = new HashSet<String>();
 		
 		for( int i = 0; i < 5 ; i++) {
 			 KeyPair keyPair1 = new KeyPair();
-			 int next = new Random().nextInt(count);
+			 String next = chapterName+"_"+new Random().nextInt(count);
 			 if(key.contains(next)) {
 				 i--;
 				 continue;
@@ -68,10 +76,12 @@ public class FetchRecordFromDynamoDB implements RequestHandler<String,List<Quest
 	    keyPairForTable.put(QuestionModel.class, keyPairList);
 
 	    Map<String, List<Object>> batchResults = mapper.batchLoad(keyPairForTable, 
-	    		new DynamoDBMapperConfig(new DynamoDBMapperConfig.TableNameOverride(input)));
+	    		new DynamoDBMapperConfig(new DynamoDBMapperConfig.TableNameOverride(tableName)));
 		
 	   // System.out.println("->"+batchResults.values().iterator().next());
-	   
+	   //Collection<java.util.List<java.lang.Object>>
+	    //questionModels.addAll((Collection<java.util.List<? extends QuestionModel>>) batchResults.values());
+	    
 	    for(Object qModel : batchResults.values().iterator().next()) {
 	    	questionModels.add((QuestionModel)qModel);
 	    }
